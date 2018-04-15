@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_scan"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".activities.ScanActivity"
+    tools:showIn="@layout/activity_scan">
+
+    <TextView
+        android:text="@string/scanForDevicesHeaderTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/scanForDevicesHeaderTextView"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:textAlignment="center"
+        android:textStyle="normal|bold"
+        android:background="@color/colorAccent"
+        android:textColor="@android:color/background_light"
+        android:textSize="18sp" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="60dp"
+        android:id="@+id/deviceListFragment"
+        android:layout_below="@id/scanForDevicesHeaderTextView">
+<!--
+        <TextView
+            android:text="@string/noDevicesTextView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:gravity="center"
+            android:id="@+id/noDevicesTextView"
+            tools:text="@string/noDevicesTextView"
+            android:textSize="14sp" />
+
+-->
+    </FrameLayout>
+    <!--
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_below="@id/deviceListFragment"
+        >
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_vehicle_speed"
+            android:textSize="18sp"/>
+        <Space android:layout_width="5dp"
+            android:layout_height="wrap_content"/>
+        <TextView android:id="@+id/vehicle_speed_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/zero_value"
+            android:textSize="18sp"
+
+            />
+    </LinearLayout>
+    -->
+</RelativeLayout>
