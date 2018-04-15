@@ -380,6 +380,7 @@ public class MainActivity extends Base {
             case R.id.menu_disconnect:
                 mBluetoothLeService.disconnect();
                 app.sensorState.setConnectionState(DISCONNECTED);
+                app.sensorState.setVehicleSpeedValue("0");
                 return true;
             case android.R.id.home:
                 onBackPressed();
@@ -414,10 +415,16 @@ public class MainActivity extends Base {
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.connected);
+                initialCurrentLocation = getLastKnownLocation();
+                if(initialCurrentLocation!=null){
+                    app.sensorState.setGeoLat(String.valueOf(initialCurrentLocation.getLatitude()));
+                    app.sensorState.setGeoLong(String.valueOf(initialCurrentLocation.getLongitude()));
+                }
                 invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
                 updateConnectionState(R.string.disconnected);
+                app.sensorState.setVehicleSpeedValue("0");
                 invalidateOptionsMenu();
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
