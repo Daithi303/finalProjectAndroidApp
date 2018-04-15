@@ -96,7 +96,7 @@ public class SensorState {
         boolean occupied = false;
         boolean vehicleMoving = false;
         if(!vehicleSpeedValue.isEmpty()) {
-            if (Float.parseFloat(vehicleSpeedValue) > 2) {
+            if (Float.parseFloat(vehicleSpeedValue) > 5) {
                 vehicleMoving = true;
             }
         }

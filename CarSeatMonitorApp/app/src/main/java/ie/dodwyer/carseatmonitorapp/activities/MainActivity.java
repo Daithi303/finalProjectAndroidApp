@@ -1,6 +1,7 @@
 package ie.dodwyer.carseatmonitorapp.activities;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -111,6 +113,7 @@ public class MainActivity extends Base {
     private Timer timer;
     private Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private Ringtone alertNotificationRingtone;
+    ColorStateList oldTextColors;
     private TimerTask timerTask = new TimerTask() {
 
         @Override
@@ -139,7 +142,7 @@ public class MainActivity extends Base {
             return;
         }
         timer = new Timer();
-        timer.scheduleAtFixedRate(timerTask, 0, 3000);
+        timer.scheduleAtFixedRate(timerTask, 3000, 3000);
     }
 
     public void stopAlertTimer() {
@@ -166,12 +169,16 @@ public class MainActivity extends Base {
         buttonChildOutOfSeatInTransitAlert.setOnClickListener(buttonClickListener);
         buttonChildStillInSeatAlert.setOnClickListener(buttonClickListener);
         buttonChildOutOfSeatStationaryAlert.setEnabled(false);
+        buttonChildOutOfSeatStationaryAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         buttonChildOutOfSeatInTransitAlert.setEnabled(false);
+        buttonChildOutOfSeatInTransitAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         buttonChildStillInSeatAlert.setEnabled(false);
+        buttonChildStillInSeatAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         childOutOfSeatStationaryStatusValue = (TextView) findViewById(R.id.child_out_of_seat_stationary_status_value);
         childOutOfSeatInTransitStatusValue = (TextView) findViewById(R.id.child_out_of_seat_in_transit_status_value);
         secondaryContactValue = (TextView) findViewById(R.id.secondary_contact_value);
         secondaryContactValue.setText(app.secondaryContact.getName());
+        oldTextColors = secondaryContactValue.getTextColors();
         childStillInSeatStatusValue = (TextView) findViewById(R.id.child_still_in_seat_status_value);
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -389,6 +396,14 @@ public class MainActivity extends Base {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        mBluetoothLeService.disconnect();
+        app.sensorState.setConnectionState(DISCONNECTED);
+        app.sensorState.setVehicleSpeedValue("0");
+        super.onBackPressed();
+    }
+
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -442,8 +457,16 @@ public class MainActivity extends Base {
 
     private void updateConnectionState(final int resourceId) {
         runOnUiThread(new Runnable() {
+            @SuppressLint("ResourceAsColor")
             @Override
             public void run() {
+                if(getString(resourceId).equals(DISCONNECTED)){
+                    mConnectionState.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorPrimaryRed));
+
+                }
+                else if(getString(resourceId).equals(CONNECTED)){
+                    mConnectionState.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorAlternative));
+                }
                 mConnectionState.setText(resourceId);
                 app.sensorState.setConnectionState(getString(resourceId));
 
@@ -451,12 +474,14 @@ public class MainActivity extends Base {
         });
     }
 
+    @SuppressLint("ResourceAsColor")
     private void displayRssi(String data) {
         int rssiRange = Integer.parseInt(data);
         String alert = new String();
-        if (rssiRange > -75) {
+        if (rssiRange > -85) {
             if (!(rssiStatusValue.getText().equals(IN_PROXIMITY))) {
                 rssiStatusValue.setText(IN_PROXIMITY);
+                rssiStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorAlternative));
                 alert = app.sensorState.setRssiStatusValue(IN_PROXIMITY);
                 /*
                 if(alert != null){
@@ -467,6 +492,7 @@ public class MainActivity extends Base {
         } else {
             if (!(rssiStatusValue.getText().equals(OUT_OF_PROXIMITY))) {
                 rssiStatusValue.setText(OUT_OF_PROXIMITY);
+                rssiStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorPrimaryRed));
                 alert = app.sensorState.setRssiStatusValue(OUT_OF_PROXIMITY);
                 /*
                 if(alert != null){
@@ -487,6 +513,8 @@ public class MainActivity extends Base {
 
                 if (!(carSeatStatusValue.getText().equals(OCCUPIED))) {
                     carSeatStatusValue.setText(OCCUPIED);
+                    carSeatStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorAlternative));
+
                     alert = app.sensorState.setCarSeatStatusValue(OCCUPIED);
                     /*
                     if (alert != null) {
@@ -497,6 +525,8 @@ public class MainActivity extends Base {
             } else {
                 if (!(carSeatStatusValue.getText().equals(UNOCCUPIED))) {
                     carSeatStatusValue.setText(UNOCCUPIED);
+                    carSeatStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorPrimaryRed));
+
                     alert = app.sensorState.setCarSeatStatusValue(UNOCCUPIED);
                     /*
                     if (alert != null) {
@@ -621,15 +651,16 @@ public class MainActivity extends Base {
 
     private void raiseChildStillInSeatAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_STILL_IN_SEAT_ALERT,true);
-        childStillInSeatStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        childStillInSeatStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorPrimaryRed));
         childStillInSeatStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildStillInSeatAlert.setEnabled(true);
+        buttonChildStillInSeatAlert.setBackgroundResource(R.drawable.rounded_button);
         //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge);
         childStillInSeatTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
-                buttonChildStillInSeatAlert.setText(String.valueOf(millisUntilFinished));
+                buttonChildStillInSeatAlert.setText(String.valueOf(Math.round(millisUntilFinished/1000)));
             }
 
             @Override
@@ -653,9 +684,10 @@ public class MainActivity extends Base {
 
     private void acknowledgeChildStillInSeatAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_STILL_IN_SEAT_ALERT,false);
-        childStillInSeatStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        childStillInSeatStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorAlternative));
         childStillInSeatStatusValue.setText(R.string.alert_status_value_no_alert_raised);
         buttonChildStillInSeatAlert.setEnabled(false);
+        buttonChildStillInSeatAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         childStillInSeatTimer.cancel();
         buttonChildStillInSeatAlert.setText(R.string.alert_button_no_alert);
         if(alertNotificationRingtone.isPlaying() == true) {
@@ -665,15 +697,16 @@ public class MainActivity extends Base {
 
     private void raiseChildOutOfSeatInTransitAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_OUT_OF_SEAT_IN_TRANSIT_ALERT,true);
-        childOutOfSeatInTransitStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        childOutOfSeatInTransitStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorPrimaryRed));
         childOutOfSeatInTransitStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildOutOfSeatInTransitAlert.setEnabled(true);
+        buttonChildOutOfSeatInTransitAlert.setBackgroundResource(R.drawable.rounded_button);
         //buttonChildOutOfSeatInTransitAlert.setText(R.string.alert_button_acknowledge);
         childOutOfSeatAlertInTransitTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
-                buttonChildOutOfSeatInTransitAlert.setText(String.valueOf(millisUntilFinished));
+                buttonChildOutOfSeatInTransitAlert.setText(String.valueOf(String.valueOf(Math.round(millisUntilFinished/1000))));
             }
 
             @Override
@@ -697,9 +730,10 @@ public class MainActivity extends Base {
 
     private void acknowledgeChildOutOfSeatInTransitAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_OUT_OF_SEAT_IN_TRANSIT_ALERT,false);
-        childOutOfSeatInTransitStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        childOutOfSeatInTransitStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorAlternative));
         childOutOfSeatInTransitStatusValue.setText(R.string.alert_status_value_no_alert_raised);
         buttonChildOutOfSeatInTransitAlert.setEnabled(false);
+        buttonChildOutOfSeatInTransitAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         childOutOfSeatAlertInTransitTimer.cancel();
         buttonChildOutOfSeatInTransitAlert.setText(R.string.alert_button_no_alert);
         if(alertNotificationRingtone.isPlaying() == true) {
@@ -710,15 +744,16 @@ public class MainActivity extends Base {
 
     private void raiseChildOutOfSeatStationaryAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_OUT_OF_SEAT_STATIONARY_ALERT,true);
-        childOutOfSeatStationaryStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        childOutOfSeatStationaryStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorPrimaryRed));
         childOutOfSeatStationaryStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildOutOfSeatStationaryAlert.setEnabled(true);
+        buttonChildOutOfSeatStationaryAlert.setBackgroundResource(R.drawable.rounded_button);
         //buttonChildOutOfSeatStationaryAlert.setText(R.string.alert_button_acknowledge);
         childOutOfSeatAlertStationaryTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
-                buttonChildOutOfSeatStationaryAlert.setText(String.valueOf(millisUntilFinished));
+                buttonChildOutOfSeatStationaryAlert.setText(String.valueOf(String.valueOf(Math.round(millisUntilFinished/1000))));
             }
 
             @Override
@@ -742,9 +777,10 @@ public class MainActivity extends Base {
 
     private void acknowledgeChildOutOfSeatStationaryAlert(){
         Alerts.alertsRaised.put(Alerts.CHILD_OUT_OF_SEAT_STATIONARY_ALERT,false);
-        childOutOfSeatStationaryStatusValue.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        childOutOfSeatStationaryStatusValue.setTextColor(ContextCompat.getColor(this, R.color.colorAlternative));
         childOutOfSeatStationaryStatusValue.setText(R.string.alert_status_value_no_alert_raised);
         buttonChildOutOfSeatStationaryAlert.setEnabled(false);
+        buttonChildOutOfSeatStationaryAlert.setBackgroundResource(R.drawable.rounded_button_semi_transparent);
         childOutOfSeatAlertStationaryTimer.cancel();
         buttonChildOutOfSeatStationaryAlert.setText(R.string.alert_button_no_alert);
         if(alertNotificationRingtone.isPlaying() == true) {
@@ -776,8 +812,11 @@ public class MainActivity extends Base {
     private void clearUI() {
 //        mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
         carSeatStatusValue.setText(R.string.no_data);
+        carSeatStatusValue.setTextColor(oldTextColors);
         rssiStatusValue.setText(R.string.no_data);
+        rssiStatusValue.setTextColor(oldTextColors);
         vehicleSpeedValue.setText(R.string.no_data);
+        carSeatStatusValue.setTextColor(oldTextColors);
     }
 
     private void displayGattServices(List<BluetoothGattService> gattServices, String charUuidToEnableNotifocation) {

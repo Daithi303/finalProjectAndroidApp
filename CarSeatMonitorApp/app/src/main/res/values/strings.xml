@@ -29,9 +29,10 @@
     <string name="alert_status_value_alerts_unacknowledged">alerts unacknowledged (secondary contact notified)</string>
     <string name="alert_button_acknowledge">Acknowledge</string>
     <string name="alert_button_no_alert">no alert</string>
-    <string name="label_secondary_contact">Secondary Contact</string>
+    <string name="label_secondary_contact">Secondary Contact: </string>
     <string name="no_secondary_contact">No secondary Contact</string>
     <string name="label_primary">Primary</string>
+    <string name="label_title">Car Seat Monitor</string>
     <string name="label_secondary">Secondary</string>
 
     <!-- Menu items -->
