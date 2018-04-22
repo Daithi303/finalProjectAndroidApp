@@ -3,7 +3,8 @@ package ie.dodwyer.carseatmonitorapp.ble;
 import java.util.HashMap;
 
 /**
- * This class includes a small subset of standard GATT attributes for demonstration purposes.
+ * This class was based on the 'SampleGattAttribtes' class from the BluetoothLeGatt tutorial on the Android Developers website:
+ * https://developer.android.com/samples/BluetoothLeGatt/SampleGattAttributes.html
  */
 public class GattAttributes {
     private static HashMap<String, String> attributes = new HashMap();

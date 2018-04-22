@@ -8,10 +8,10 @@ import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.widget.Toast;
 
-/**
- * Created by User on 4/17/2017.
- */
-
+/*
+ * This class was based on code from the following web page:
+ * https://www.androidauthority.com/how-to-create-an-sms-app-721438/
+ * */
 public class SendBroadcastReceiver extends BroadcastReceiver {
     private static final String ACTION_SMS_SENT = "SMS_SENT";
     @Override

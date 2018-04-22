@@ -44,7 +44,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -58,21 +57,21 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import ie.dodwyer.carseatmonitorapp.R;
 import ie.dodwyer.carseatmonitorapp.ble.BluetoothLeService;
 import ie.dodwyer.carseatmonitorapp.ble.GattAttributes;
 import ie.dodwyer.carseatmonitorapp.model.Alert;
 import ie.dodwyer.carseatmonitorapp.model.Alerts;
 import ie.dodwyer.carseatmonitorapp.model.SecondaryContact;
-
+/**
+ * This class was based on the 'DeviceControlActivity' class from the BluetoothLeGatt tutorial on the Android Developers website:
+ * https://developer.android.com/samples/BluetoothLeGatt/src/com.example.android.bluetoothlegatt/DeviceControlActivity.html
+ */
 public class MainActivity extends Base {
     LocationManager locationManager;
     Location initialCurrentLocation;
-    private static final String ENDPOINT = "https://kylewbanks.com/rest/posts.json";
     private RequestQueue requestQueue;
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -92,7 +91,6 @@ public class MainActivity extends Base {
     public CountDownTimer childOutOfSeatAlertStationaryTimer;
     public CountDownTimer childOutOfSeatAlertInTransitTimer;
     public CountDownTimer childStillInSeatTimer;
-    private ExpandableListView mGattServicesList;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private boolean mConnected = false;
@@ -124,7 +122,7 @@ public class MainActivity extends Base {
                 public void run() {
                         updateSensorState();
                     String alert = app.sensorState.checkSensorStateForAlert();
-                    if (alert != null)
+                    if (alert != null&& mConnected==true)
 
                     {
                         if (Alerts.alertsRaised.get(alert) == false) {
@@ -219,6 +217,10 @@ public class MainActivity extends Base {
         }
     }
 
+    /*
+     * The code in the method below was based on code from the following web page:
+     * https://stackoverflow.com/questions/40079174/how-to-send-a-post-request-with-json-body-using-volley/40079812
+     * */
     public void insertAlert(Alert alertObj) {
         try {
 
@@ -235,12 +237,10 @@ public class MainActivity extends Base {
             StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    Log.i("LOG_VOLLEY", "JSON Update: " + response);
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.e("LOG_VOLLEY", "JSON Update: " + error.toString());
                 }
             }) {
                 @Override
@@ -276,22 +276,16 @@ public class MainActivity extends Base {
         }
     }
 
+
+    /*
+     * The code in the method below was based on code from the following web page:
+     * https://stackoverflow.com/questions/40079174/how-to-send-a-post-request-with-json-body-using-volley/40079812
+     * */
     public void updateSensorState() {
         try {
 
             String URL = "https://car-seat-monitor-api-daithi303.c9users.io:8080/api/sensorState/" + app.sensorState.getDeviceId();
             JSONObject jsonBody = new JSONObject();
-            /*
-            if(app.sensorState.getConnectionState().equals(DISCONNECTED)){
-                jsonBody.put("carSeatStatusValue", "No Data");
-                jsonBody.put("vehicleSpeedValue", "No Data");
-                jsonBody.put("rssiStatusValue", "No Data");
-                jsonBody.put("geoLat", "No Data");
-                jsonBody.put("geoLong", "No Data");
-                jsonBody.put("connectionState", app.sensorState.getConnectionState());
-                jsonBody.put("connectionStateTimeStamp", "999999999999999");
-            }else{
-            */
             jsonBody.put("carSeatStatusValue", app.sensorState.getCarSeatStatusValue());
             jsonBody.put("vehicleSpeedValue", app.sensorState.getVehicleSpeedValue());
             jsonBody.put("rssiStatusValue", app.sensorState.getRssiStatusValue());
@@ -299,18 +293,16 @@ public class MainActivity extends Base {
             jsonBody.put("geoLong", app.sensorState.getGeoLong());
             jsonBody.put("connectionState", app.sensorState.getConnectionState());
             jsonBody.put("connectionStateTimeStamp", getTimeInMilliseconds());
-        //}
+
             final String mRequestBody = jsonBody.toString();
 
             StringRequest stringRequest = new StringRequest(Request.Method.PUT, URL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    Log.i("LOG_VOLLEY", "JSON Update: " + response);
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.e("LOG_VOLLEY", "JSON Update: " + error.toString());
                 }
             }) {
                 @Override
@@ -378,6 +370,7 @@ public class MainActivity extends Base {
             case R.id.menu_connect:
                 mBluetoothLeService.connect(mDeviceAddress);
                 app.sensorState.setConnectionState(CONNECTED);
+                mConnected=true;
                 initialCurrentLocation = getLastKnownLocation();
                 if(initialCurrentLocation!=null){
                     app.sensorState.setGeoLat(String.valueOf(initialCurrentLocation.getLatitude()));
@@ -387,6 +380,7 @@ public class MainActivity extends Base {
             case R.id.menu_disconnect:
                 mBluetoothLeService.disconnect();
                 app.sensorState.setConnectionState(DISCONNECTED);
+                mConnected=false;
                 app.sensorState.setVehicleSpeedValue("0");
                 return true;
             case android.R.id.home:
@@ -413,7 +407,6 @@ public class MainActivity extends Base {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
             }
-            // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
         }
 
@@ -444,7 +437,6 @@ public class MainActivity extends Base {
                 clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Log.i(TAG, "onRecieve GATT_SERVICES_DISCOVERED");
-                // Show all the supported services and characteristics on the user interface.
                 displayGattServices(mBluetoothLeService.getSupportedGattServices(), "ff51b30e-d7e2-4d93-8842-a7c4a57dfb99");
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 displayCarSeat(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
@@ -483,22 +475,12 @@ public class MainActivity extends Base {
                 rssiStatusValue.setText(IN_PROXIMITY);
                 rssiStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorAlternative));
                 alert = app.sensorState.setRssiStatusValue(IN_PROXIMITY);
-                /*
-                if(alert != null){
-                    alertPrimaryContact(this,alert);
-                }
-                */
             }
         } else {
             if (!(rssiStatusValue.getText().equals(OUT_OF_PROXIMITY))) {
                 rssiStatusValue.setText(OUT_OF_PROXIMITY);
                 rssiStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorPrimaryRed));
                 alert = app.sensorState.setRssiStatusValue(OUT_OF_PROXIMITY);
-                /*
-                if(alert != null){
-                    alertPrimaryContact(this,alert);
-                }
-                */
             }
         }
     }
@@ -516,11 +498,6 @@ public class MainActivity extends Base {
                     carSeatStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorAlternative));
 
                     alert = app.sensorState.setCarSeatStatusValue(OCCUPIED);
-                    /*
-                    if (alert != null) {
-                        alertPrimaryContact(this, alert);
-                    }
-                    */
                 }
             } else {
                 if (!(carSeatStatusValue.getText().equals(UNOCCUPIED))) {
@@ -528,28 +505,19 @@ public class MainActivity extends Base {
                     carSeatStatusValue.setTextColor(ContextCompat.getColor(MainActivity.this,R.color.colorPrimaryRed));
 
                     alert = app.sensorState.setCarSeatStatusValue(UNOCCUPIED);
-                    /*
-                    if (alert != null) {
-                        alertPrimaryContact(this, alert);
-                    }
-                    */
                 }
             }
         }
     }
 
-    ////////////////////////////////////
+    /*
+    * The code in the method below was based on code from the following web page:
+    * https://stackoverflow.com/questions/25483352/how-to-get-last-known-location-for-location-manager-in-android
+    * */
     public Location getLastKnownLocation() {
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         if (locationManager != null) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return null;
             }
             Location lastKnownLocationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -564,10 +532,14 @@ public class MainActivity extends Base {
         return null;
     }
 }
-    //////////////////////////////
+
+
+/*
+ * The code in the method below was based on code from the following web page:
+ * http://www.androidhub4you.com/2013/06/how-to-get-device-current-speed-in_112.html
+ * */
     private void initiateGPSLocationManager(){
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        // Define a listener that responds to location updates
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 String geoLat = String.valueOf(location.getLatitude());
@@ -578,11 +550,6 @@ public class MainActivity extends Base {
                 String alert = app.sensorState.setVehicleSpeedValue(df.format(vehicleSpeed));
                 app.sensorState.setGeoLat(geoLat);
                 app.sensorState.setGeoLong(geoLong);
-                /*
-                if (alert != null) {
-                    alertPrimaryContact(MainActivity.this, alert);
-                }
-                */
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -598,22 +565,12 @@ public class MainActivity extends Base {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            // The permission is NOT already granted.
-            // Check if the user has been asked about this permission already and denied
-            // it. If so, we want to give more explanation about why the permission is needed.
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // Show our own UI to explain to the user why we need to read the contacts
-                // before actually requesting the permission and showing the default UI
-            } else {
 
-                // Fire off an async request to actually get the permission
-                // This will show the standard permission request dialog UI
+            } else {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         FIME_LOCATION_PERMISSIONS_REQUEST);
-
-
             }
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
@@ -642,11 +599,6 @@ public class MainActivity extends Base {
             raiseChildOutOfSeatStationaryAlert();
             insertAlert(alertObj);
         }
-        /*
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(context, alert, duration);
-        toast.show();
-        */
 }
 
     private void raiseChildStillInSeatAlert(){
@@ -655,11 +607,9 @@ public class MainActivity extends Base {
         childStillInSeatStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildStillInSeatAlert.setEnabled(true);
         buttonChildStillInSeatAlert.setBackgroundResource(R.drawable.rounded_button);
-        //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge);
         childStillInSeatTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
                 buttonChildStillInSeatAlert.setText(String.valueOf(Math.round(millisUntilFinished/1000)));
             }
 
@@ -701,11 +651,9 @@ public class MainActivity extends Base {
         childOutOfSeatInTransitStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildOutOfSeatInTransitAlert.setEnabled(true);
         buttonChildOutOfSeatInTransitAlert.setBackgroundResource(R.drawable.rounded_button);
-        //buttonChildOutOfSeatInTransitAlert.setText(R.string.alert_button_acknowledge);
         childOutOfSeatAlertInTransitTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
                 buttonChildOutOfSeatInTransitAlert.setText(String.valueOf(String.valueOf(Math.round(millisUntilFinished/1000))));
             }
 
@@ -748,11 +696,9 @@ public class MainActivity extends Base {
         childOutOfSeatStationaryStatusValue.setText(R.string.alert_status_value_alert_raised);
         buttonChildOutOfSeatStationaryAlert.setEnabled(true);
         buttonChildOutOfSeatStationaryAlert.setBackgroundResource(R.drawable.rounded_button);
-        //buttonChildOutOfSeatStationaryAlert.setText(R.string.alert_button_acknowledge);
         childOutOfSeatAlertStationaryTimer = new CountDownTimer(30000,1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                //buttonChildStillInSeatAlert.setText(R.string.alert_button_acknowledge+" "+millisUntilFinished);
                 buttonChildOutOfSeatStationaryAlert.setText(String.valueOf(String.valueOf(Math.round(millisUntilFinished/1000))));
             }
 
@@ -810,7 +756,6 @@ public class MainActivity extends Base {
 
 
     private void clearUI() {
-//        mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
         carSeatStatusValue.setText(R.string.no_data);
         carSeatStatusValue.setTextColor(oldTextColors);
         rssiStatusValue.setText(R.string.no_data);
@@ -828,8 +773,6 @@ public class MainActivity extends Base {
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
                 = new ArrayList<ArrayList<HashMap<String, String>>>();
         mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-
-        // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
             HashMap<String, String> currentServiceData = new HashMap<String, String>();
             uuid = gattService.getUuid().toString();
@@ -845,7 +788,6 @@ public class MainActivity extends Base {
             ArrayList<BluetoothGattCharacteristic> charas =
                     new ArrayList<BluetoothGattCharacteristic>();
 
-            // Loops through available Characteristics.
             for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
                 charas.add(gattCharacteristic);
                 HashMap<String, String> currentCharaData = new HashMap<String, String>();
@@ -854,14 +796,11 @@ public class MainActivity extends Base {
                     if(uuid.equals(charUuidToEnableNotifocation)){
                         final int charaProp = gattCharacteristic.getProperties();
                         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                            // If there is an active notification on a characteristic, clear
-                            // it first so it doesn't update the data field on the user interface.
                             if (mNotifyCharacteristic != null) {
                                 mBluetoothLeService.setCharacteristicNotification(
                                         mNotifyCharacteristic, false);
                                 mNotifyCharacteristic = null;
                             }
-                            // mBluetoothLeService.readCharacteristic(characteristic);
                         }
                         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
                             mNotifyCharacteristic = gattCharacteristic;
@@ -879,19 +818,6 @@ public class MainActivity extends Base {
             gattCharacteristicData.add(gattCharacteristicGroupData);
         }
 
-        SimpleExpandableListAdapter gattServiceAdapter = new SimpleExpandableListAdapter(
-                this,
-                gattServiceData,
-                android.R.layout.simple_expandable_list_item_2,
-                new String[] {LIST_NAME, LIST_UUID},
-                new int[] { android.R.id.text1, android.R.id.text2 },
-                gattCharacteristicData,
-                android.R.layout.simple_expandable_list_item_2,
-                new String[] {LIST_NAME, LIST_UUID},
-                new int[] { android.R.id.text1, android.R.id.text2 }
-        );
-
-        // mGattServicesList.setAdapter(gattServiceAdapter);
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
@@ -904,6 +830,11 @@ public class MainActivity extends Base {
         return intentFilter;
     }
 
+
+    /*
+     * Some of the code in the method below was based on code from the following web page:
+     * https://www.androidauthority.com/how-to-create-an-sms-app-721438/
+     * */
     public void sendSMS(SecondaryContact secondaryContact, String alertType){
         Intent sendIntent = new Intent(ACTION_SMS_SENT);
         sendIntent.putExtra("contact", secondaryContact.getName());

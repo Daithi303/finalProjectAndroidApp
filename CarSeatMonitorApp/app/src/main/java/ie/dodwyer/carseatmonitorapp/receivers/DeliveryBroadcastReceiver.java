@@ -1,19 +1,19 @@
 package ie.dodwyer.carseatmonitorapp.receivers;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
-
-import java.util.List;
-
 import ie.dodwyer.carseatmonitorapp.activities.Base;
 import ie.dodwyer.carseatmonitorapp.main.CarSeatMonitorApp;
 
+
+/*
+* This class was based on code from the following web page:
+* https://www.androidauthority.com/how-to-create-an-sms-app-721438/
+* */
 public class DeliveryBroadcastReceiver extends BroadcastReceiver {
     private static final String ACTION_SMS_DELIVERED = "SMS_DELIVERED";
     protected Base activity;

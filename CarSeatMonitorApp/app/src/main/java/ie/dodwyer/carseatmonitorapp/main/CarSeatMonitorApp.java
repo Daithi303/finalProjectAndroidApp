@@ -3,27 +3,20 @@ package ie.dodwyer.carseatmonitorapp.main;
 import android.app.Activity;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.Context;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.ParcelUuid;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import ie.dodwyer.carseatmonitorapp.adapters.DeviceListAdapter;
-import ie.dodwyer.carseatmonitorapp.ble.BluetoothLeService;
 import ie.dodwyer.carseatmonitorapp.ble.GattAttributes;
 import ie.dodwyer.carseatmonitorapp.model.SecondaryContact;
 import ie.dodwyer.carseatmonitorapp.model.SensorState;
-import ie.dodwyer.carseatmonitorapp.model.SensorStateDto;
 
 public class CarSeatMonitorApp extends Application {
     public Handler mHandler;
@@ -31,13 +24,9 @@ public class CarSeatMonitorApp extends Application {
     public BluetoothLeScanner bluetoothLeScanner;
     public BluetoothAdapter mBluetoothAdapter;
     public SensorState sensorState;
-    //public static final int REQUEST_ENABLE_BT = 1;
     public DeviceListAdapter mLeDeviceListAdapter;
-    private BluetoothLeService mBluetoothLeService;
     public boolean mScanning;
     public SecondaryContact secondaryContact;
-   // private static final int COARSE_LOCATION_PERMISSIONS_REQUEST = 1;
-    // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
     @Override
     public void onCreate()
@@ -67,7 +56,6 @@ public class CarSeatMonitorApp extends Application {
 
     public void scanLeDevice(final boolean enable, final Activity activity) {
         this.activity = activity;
-        //mLeDeviceListAdapter = new DeviceListAdapter(activity);
         bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         ScanFilter beaconFilter = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(GattAttributes.CHILD_SEAT_SERVICE)).build();
         ArrayList<ScanFilter> filters = new ArrayList<ScanFilter>();
@@ -81,7 +69,6 @@ public class CarSeatMonitorApp extends Application {
                 public void run() {
                     mScanning = false;
                     bluetoothLeScanner.stopScan(mLeScanCallback);
-                    //mBluetoothAdapter.stopLeScan(mLeScanCallback);
                     activity.invalidateOptionsMenu();
                 }
             }, SCAN_PERIOD);
@@ -89,13 +76,13 @@ public class CarSeatMonitorApp extends Application {
             mScanning = true;
             UUID[] uuid = new UUID[1];
             bluetoothLeScanner.startScan(filters,settings,mLeScanCallback);
-            //mBluetoothAdapter.startLeScan( mLeScanCallback);
+
 
         } else {
 
             mScanning = false;
             bluetoothLeScanner.stopScan(mLeScanCallback);
-            //mBluetoothAdapter.stopLeScan(mLeScanCallback);
+
         }
         this.activity.invalidateOptionsMenu();
     }
@@ -121,24 +108,5 @@ public class CarSeatMonitorApp extends Application {
         }
     };
 
-    /*
-    // Device scan callback.
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
 
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(device != null) {
-                                System.out.println("mLeScanCallback- Device: "+device.getName());
-                                mLeDeviceListAdapter.addDevice(device);
-                                mLeDeviceListAdapter.notifyDataSetChanged();
-                            }
-                        }
-                    });
-                }
-            };
-            */
 }

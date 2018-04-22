@@ -12,10 +12,5 @@ public class Alerts {
         alertsRaised.put(CHILD_OUT_OF_SEAT_IN_TRANSIT_ALERT, false);
         alertsRaised.put(CHILD_STILL_IN_SEAT_ALERT, false);
     }
-/*
-    public static String lookup(String uuid, String defaultName) {
-        String name = attributes.get(uuid);
-        return name == null ? defaultName : name;
-    }
-    */
+
 }

@@ -1,29 +1,17 @@
 package ie.dodwyer.carseatmonitorapp.adapters;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.util.ArrayList;
-
 import ie.dodwyer.carseatmonitorapp.R;
-import ie.dodwyer.carseatmonitorapp.activities.ScanActivity;
 
 public class DeviceListAdapter extends BaseAdapter {
     private ArrayList<BluetoothDevice> mLeDevices;
-   // private LayoutInflater mInflator;
     private Context context;
 
     public DeviceListAdapter(Context context) {
@@ -66,7 +54,6 @@ public class DeviceListAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         ViewHolder viewHolder;
-        // General ListView optimization code.
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = inflater.inflate(R.layout.listitem_device, null);

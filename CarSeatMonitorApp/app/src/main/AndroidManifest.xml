@@ -20,6 +20,7 @@
         <activity
             android:name=".activities.ScanActivity"
             android:label="@string/label_title"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,6 +29,7 @@
             </intent-filter>
         </activity>
         <activity android:label="@string/label_title"
+            android:screenOrientation="portrait"
             android:name=".activities.MainActivity"></activity>
         <service
             android:name=".ble.BluetoothLeService"
